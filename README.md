@@ -5,14 +5,10 @@
    ```
    
    Followed by `npm install`
-   
-   
 
 2. **Delete all of the boilerplate and set up components file**
    
    Remove everything except for main.jsx and App.jsx, and clear out everything but return statement in App.jsx. (You may need to remove certain lines from main.jsx related to index.css as well). Next, create a folder called 'components' within src.
-   
-   
 
 3. **Create a box component (drag)**
    
@@ -41,7 +37,6 @@
        </div>
      );
    }
-   
    ```
 
 4. **Create a dustbin component (drop)**
@@ -71,7 +66,6 @@
        </div>
      );
    }
-   
    ```
 
 5. **Render them next to each other on the screen**
@@ -92,7 +86,6 @@
    }
    
    export default App;
-   
    ```
 
 6. **Install react-dnd and react-dnd-html5-backend**
@@ -126,7 +119,6 @@
    }
    
    export default App;
-   
    ```
 
 8. **Define the Drag Types**
@@ -140,8 +132,6 @@
    ```
    
    In this case, there is only one ('BOX'), but this is useful if there are various types of draggable items in an application and you only want certain drop zones to accept certain types.
-   
-   
 
 9. **Make the box draggable**
    
@@ -181,7 +171,6 @@
        </div>
      );
    }
-   
    ```
    
    The main things to look at:
@@ -195,8 +184,6 @@
    - Added the `ref={drag}` property to the box's `div` component. It doesn't work without this. 
    
    - Added some conditional css to change the appearance of the box while it's being dragged, referencing the `isDragging` prop from the useDrag hook.
-   
-   
 
 10. **Make the dustbin droppable**
     
@@ -297,3 +284,40 @@
     );
     }
     ```
+
+
+
+## Understanding the useDrag Hook
+
+When the useDrag hook is called at the top of a component, it returns an array. 
+
+- The first element in the array is an object containing the `isDragging` state, among various other state flags (hence the need for the `{}` to unpack it), which will be `true` when the element is currently being dragged, and `false` otherwise.
+
+- The second element in the array, `drag`, is a connector function used to assign the drag source role to a DOM element
+
+Using array destructuring, we unpack each of those elements into the variables `isDragging` and `drag` respectively.
+
+```jsx
+const [{ isDragging }, drag] = useDrag(...)
+```
+
+The argument that is passed into useDrag is a **configuration object**, or, more accurately, a function that returns a configuration object. Important point about this hook, and about hooks in general: *Exactly when and how a hook's arguments are used is determiend by the internal logic of the hook.*
+
+The configuration object contains two properties:
+
+- `type`: This specifies the type of the draggable item covered by this hook. It should reference an `ItemTypes` object, usually stored in a `Constants.js` file somewhere else in the app directory.
+
+- `collect`: This is a function that defines and exposes properties from the useDrop hook for use in our components. It receives an instance of `DragSourceMonitor` as its argument, usually written as `monitor`, and returns an object. The properties of this object are up to us, and should represent the state or functions we need from the drag-and-drop operation.
+  
+  - In my case, I want to get the drag state, supplied by the `DragSourceMonitor`, and add it as a property called `isDragging`. This `isDragging` property can be accessed elsewhere to modify styling and/or behavior. (The `!!` just forces a Boolean result and could maybe be ommitted)
+
+```jsx
+const [{ isDragging }, drag] = useDrag(() => ({
+  type: ItemTypes.BOX,
+  collect: monitor => ({
+    isDragging: !!monitor.isDragging(),
+  }),
+}));
+```
+
+Finally, remember that in order to fully link the drag functionality to the DOM element, a `ref={drag}` property must be placed in the appropriate location. Otherwise it will not work!
